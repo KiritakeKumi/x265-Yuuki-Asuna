@@ -7,13 +7,20 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "cmake version ${CMAKE_VERSION}")
 if(POLICY CMP0025)
-    cmake_policy(SET CMP0025 OLD) # report Apple's Clang as just Clang
+    # OLD behavior (report Apple's Clang as plain Clang) was removed in CMake 4.0.
+    # Keep it for older CMake; let CMake >= 4.0 use the default (NEW).
+    if(CMAKE_VERSION VERSION_LESS 4.0)
+        cmake_policy(SET CMP0025 OLD) # report Apple's Clang as just Clang
+    endif()
 endif()
 if(POLICY CMP0042)
     cmake_policy(SET CMP0042 NEW) # MACOSX_RPATH
 endif()
 if(POLICY CMP0054)
-    cmake_policy(SET CMP0054 OLD) # Only interpret if() arguments as variables or keywords when unquoted
+    # OLD behavior was removed in CMake 4.0; fall back to default (NEW) on newer CMake.
+    if(CMAKE_VERSION VERSION_LESS 4.0)
+        cmake_policy(SET CMP0054 OLD) # Only interpret if() arguments as variables or keywords when unquoted
+    endif()
 endif()
 
 project (x265)
@@ -49,7 +56,9 @@ endif()
 # System architecture detection
 string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" SYSPROC)
 set(X86_ALIASES x86 i386 i686 x86_64 amd64)
-set(ARM_ALIASES armv6l armv7l aarch64)
+# arm64 is reported by CMAKE_SYSTEM_PROCESSOR on Windows on ARM; aarch64 is
+# used by Linux/macOS. Keep both so native Windows ARM builds are detected.
+set(ARM_ALIASES armv6l armv7l aarch64 arm64)
 list(FIND X86_ALIASES "${SYSPROC}" X86MATCH)
 list(FIND ARM_ALIASES "${SYSPROC}" ARMMATCH)
 set(POWER_ALIASES ppc64 ppc64le)

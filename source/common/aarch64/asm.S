@@ -32,15 +32,23 @@
 #ifdef __ELF__
 #define ELF
 #else
-#define ELF @
+/* Clang's integrated assembler for AArch64/COFF (Windows on ARM) does not
+ * accept '@' as a comment character the way GAS does; '#' works on both. */
+#define ELF #
 #endif
 
+/* .func/.endfunc are GAS/ELF-only directives; clang's assembler lacks them on
+ * COFF, so only emit them on ELF targets (preserving original GAS behavior). */
+#ifdef __ELF__
 #define HAVE_AS_FUNC 1
+#else
+#define HAVE_AS_FUNC 0
+#endif
 
 #if HAVE_AS_FUNC
 #define FUNC
 #else
-#define FUNC @
+#define FUNC #
 #endif
 
 .macro function name, export=1

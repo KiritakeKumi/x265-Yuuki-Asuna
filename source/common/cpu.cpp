@@ -39,7 +39,11 @@
 #include <machine/cpu.h>
 #endif
 
-#if X265_ARCH_ARM && !defined(HAVE_NEON)
+// ARMv7 NEON runtime detection via SIGILL trapping is a POSIX-only mechanism
+// (sigsetjmp/siglongjmp). Windows has no sigsetjmp, so skip it there. This
+// only affects 32-bit ARM builds compiled without -mfpu=neon; AArch64 (which
+// always defines HAVE_NEON) and Windows on ARM64 are unaffected.
+#if X265_ARCH_ARM && !defined(HAVE_NEON) && !defined(_WIN32)
 #include <signal.h>
 #include <setjmp.h>
 static sigjmp_buf jmpbuf;
